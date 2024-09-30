@@ -13,21 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package egovframework.dev.imp.dbio;
+package egovframework.dev.imp.dbio.common;
 
-import java.net.URL;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.BundleContext;
-
-import egovframework.dev.imp.dbio.common.DbioLog;
+import egovframework.dev.imp.dbio.DBIOPlugin;
 
 /**
- * eGovFramework DBIO 플러그인의 라이프 사이클을 관리하는 Activator 클래스
+ * DBIO Plugin의 로그 객체
  * @author 개발환경 개발팀 김형조
  * @since 2009.02.20
  * @version 1.0
@@ -40,104 +34,72 @@ import egovframework.dev.imp.dbio.common.DbioLog;
  *  -------    --------    ---------------------------
  *   2009.02.20  김형조          최초 생성
  *
- * 
  * </pre>
  */
-public class DBIOPlugin extends AbstractUIPlugin {
+public class DbioLog {
 
-	// The plug-in ID
-	public static final String PLUGIN_ID = "egovframework.dev.imp.dbio"; //$NON-NLS-1$
+    private static final int DEFAULT_CODE = IStatus.OK;
 
-	// The shared instance
-	private static DBIOPlugin plugin;
-	
-	private static final String ICONS_PATH = "icons/"; //$NON-NLS-1$
-	public static final String IMG_SQL_MAP_WIZ_BANNER = "sql_map_wiz_banner"; //$NON-NLS-1$
-	public static final String IMG_SQL_MAP_CONFIG_WIZ_BANNER = "sql_map_config_wiz_banner"; //$NON-NLS-1$
-	public static final String IMG_MAPPER_WIZ_BANNER = "mapper_wiz_banner"; //$NON-NLS-1$
-	public static final String IMG_MAPPER_CONFIGURATION_WIZ_BANNER = "mapper_configuration_wiz_banner"; //$NON-NLS-1$	
-	public static final String IMG_PROPERTY = "property"; //$NON-NLS-1$
-	
-	
-	/**
-	 * 생성자
-	 */
-	public DBIOPlugin() {
-	}
+    /**
+     * 로깅할 상태 생성
+     * 
+     * @param severity 로그의 심각도
+     * @param code 상태 코드
+     * @param message 로그 메시지
+     * @param exception 예외 객체 (있는 경우)
+     * @return 생성된 IStatus 객체
+     */
+    private static IStatus createStatus(int severity, int code, String message, Throwable exception) {
+        return new Status(severity, DBIOPlugin.PLUGIN_ID, code, message, exception);
+    }
 
-	/** 
-	 * 플러그인 시작
-	 * @param context
-	 */
-	public void start(BundleContext context) throws Exception {
-		super.start(context);
-		plugin = this;
-	}
+    /**
+     * 로깅 처리
+     * 
+     * @param status 로깅할 IStatus 객체
+     */
+    private static void logStatus(IStatus status) {
+        DBIOPlugin.getDefault().getLog().log(status);
+    }
 
-	/**
-	 * 클러그인 종료 
-	 * 
-	 * @parm context
-	 */
-	public void stop(BundleContext context) throws Exception {
-		plugin = null;
-		super.stop(context);
-	}
+    /**
+     * 정보레벨 로깅처리
+     * 
+     * @param message 로그 메시지
+     */
+    public static void logInfo(String message) {
+        log(IStatus.INFO, DEFAULT_CODE, message, null);
+    }
 
-	/**
-	 * DBIOPlugin 공유 인스턴스 반환
-	 *
-	 * @return DBIOPlugin 공유 인스턴스
-	 */
-	public static DBIOPlugin getDefault() {
-		return plugin;
-	}
-	
-	/**
-	 * 이미지 등록
-	 * @param registry
-	 * @param key
-	 * @param fileName
-	 */
-	@SuppressWarnings("deprecation")
-	private void registerImage(ImageRegistry registry, String key,
-			String fileName) {
-		try {
-			IPath path = new Path(ICONS_PATH + fileName);
-			URL url = find(path);
-			if (url != null) {
-				ImageDescriptor desc = ImageDescriptor.createFromURL(url);
-				registry.put(key, desc);
-			}
-		} catch (Exception e) {
-			DbioLog.logError(e);
-		}
-		return;
-	}
-	
-	/**
-	 * ImageRegistry 초기화
-	 * 
-	 * @param registry
-	 */
-	protected void initializeImageRegistry(ImageRegistry registry) {
-		super.initializeImageRegistry(registry);
+    /**
+     * 에러레벨 로깅 처리
+     * 
+     * @param exception 예외 객체
+     */
+    public static void logError(Throwable exception) {
+        logError("Unexpected Exception", exception);
+    }
 
-		registerImage(registry, IMG_SQL_MAP_WIZ_BANNER,	"wizards/sqlmap_wiz.png"); //$NON-NLS-1$
-		registerImage(registry, IMG_SQL_MAP_CONFIG_WIZ_BANNER, "wizards/sqlmapconfig_wiz.png"); //$NON-NLS-1$		
-		registerImage(registry, IMG_MAPPER_WIZ_BANNER,	"wizards/mapper_wiz.png"); //$NON-NLS-1$
-		registerImage(registry, IMG_MAPPER_CONFIGURATION_WIZ_BANNER, "wizards/mapperconfiguration_wiz.png"); //$NON-NLS-1$				
-		registerImage(registry, IMG_PROPERTY, "editors/property.gif"); //$NON-NLS-1$		
-		return;
-	}
-	
-	/**
-	 * ImageDescriptor 가져오기
-	 * @param key
-	 * @return ImageDescriptor
-	 */
-	public ImageDescriptor getImageDescriptor(String key) {
-		ImageDescriptor imageDescriptor = getImageRegistry().getDescriptor(key);
-		return imageDescriptor;
-	}	
+    /**
+     * 에러레벨 로깅 처리
+     * 
+     * @param message 에러 메시지
+     * @param exception 예외 객체
+     */
+    public static void logError(String message, Throwable exception) {
+        log(IStatus.ERROR, DEFAULT_CODE, message, exception);
+    }
+
+    /**
+     * 대표 로깅 처리
+     * 
+     * @param severity 로그의 심각도
+     * @param code 상태 코드
+     * @param message 로그 메시지
+     * @param exception 예외 객체 (있는 경우)
+     */
+    public static void log(int severity, int code, String message, Throwable exception) {
+        IStatus status = createStatus(severity, code, message, exception);
+        logStatus(status);
+    }
 }
